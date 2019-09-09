@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/umich-vci/gospoc"
 )
 
 func dataSourceClient() *schema.Resource {
@@ -54,6 +55,42 @@ func dataSourceClient() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"contact": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"deduplication": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"email": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"authentication": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"session_initiation": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"decommissioned": &schema.Schema{
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"ssl_required": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"option_set": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"split_large_objects": &schema.Schema{
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -67,23 +104,47 @@ func dataSourceClientRead(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	serverName := d.Get("server_name").(string)
 
-	backupClient, _, err := client.Clients.Details(context.Background(), serverName, name)
+	backupClients, _, err := client.Clients.List(context.Background())
 	if err != nil {
 		return err
 	}
-
-	locked := backupClient.Locked != 0
+	var backupClient gospoc.BackupClient
+	for i := range backupClients {
+		if backupClients[i].Name == name && backupClients[i].Server == serverName {
+			backupClient = backupClients[i]
+		}
+	}
 
 	d.SetId(backupClient.Name)
 	d.Set("platform", backupClient.Platform)
 	d.Set("domain", backupClient.Domain)
-	d.Set("locked", locked)
+	d.Set("locked", backupClient.Locked != 0)
 	d.Set("version", backupClient.Version)
 	d.Set("vm_owner", backupClient.VMOwner)
 	d.Set("guid", backupClient.GUID)
 	d.Set("link", backupClient.Link)
 	d.Set("type", backupClient.Type)
 	d.Set("vm_type", backupClient.VMType)
+
+	backupClientDetails, _, err := client.Clients.Details(context.Background(), serverName, name)
+	if err != nil {
+		return err
+	}
+
+	splitLargeObjects, err := parseYesNoBool(backupClientDetails.SplitLargeObjects)
+	if err != nil {
+		return err
+	}
+
+	d.Set("contact", backupClientDetails.Contact)
+	d.Set("deduplication", backupClientDetails.Deduplication)
+	d.Set("email", backupClientDetails.Email)
+	d.Set("authentication", backupClientDetails.Authentication)
+	d.Set("session_initiation", backupClientDetails.SessionInitiation)
+	d.Set("decommissioned", backupClientDetails.Decommissioned)
+	d.Set("ssl_required", backupClientDetails.SSLRequired)
+	d.Set("option_set", backupClientDetails.OptionSet)
+	d.Set("split_large_objects", splitLargeObjects)
 
 	return nil
 }

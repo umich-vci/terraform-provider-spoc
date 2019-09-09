@@ -1,7 +1,7 @@
 package spoc
 
 import (
-	"sync"
+	"fmt"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
@@ -61,4 +61,17 @@ func Provider() terraform.ResourceProvider {
 	}
 }
 
-var mutex = &sync.Mutex{}
+func parseYesNoBool(val string) (bool, error) {
+	switch val {
+	case "Yes",
+		"yes",
+		"YES":
+		return true, nil
+	case "No",
+		"no",
+		"NO":
+		return false, nil
+	default:
+		return false, fmt.Errorf("Unable to parse %s with parseYesNoBool", val)
+	}
+}
