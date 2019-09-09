@@ -123,6 +123,42 @@ func dataSourceClient() *schema.Resource {
 					},
 				},
 			},
+			"filespaces": &schema.Schema{
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"fs_logical_mb": {
+							Type:     schema.TypeFloat,
+							Computed: true,
+						},
+						"fs_copy_pool": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"link": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"fs_num_files": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"fs_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -193,7 +229,6 @@ func dataSourceClientRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-
 	backupClientSchedules := make([]map[string]interface{}, 0, len(rawBackupClientSchedules))
 	for i := range rawBackupClientSchedules {
 		backupClientSchedules = append(backupClientSchedules, map[string]interface{}{
@@ -204,8 +239,25 @@ func dataSourceClientRead(d *schema.ResourceData, meta interface{}) error {
 			"domain_name":   rawBackupClientSchedules[i].DomainName,
 		})
 	}
-
 	d.Set("schedules", backupClientSchedules)
+
+	rawFilespaces, _, err := client.Clients.FileSpaces(context.Background(), serverName, name)
+	if err != nil {
+		return err
+	}
+	backupFilespaces := make([]map[string]interface{}, 0, len(rawFilespaces))
+	for i := range rawFilespaces {
+		backupFilespaces = append(backupFilespaces, map[string]interface{}{
+			"fs_logical_mb": rawFilespaces[i].FSLogicalMB,
+			"fs_copy_pool":  rawFilespaces[i].FSCopyPool,
+			"link":          rawFilespaces[i].Link,
+			"fs_num_files":  rawFilespaces[i].FSNumFiles,
+			"id":            rawFilespaces[i].ID,
+			"fs_type":       rawFilespaces[i].FSType,
+			"name":          rawFilespaces[i].Name,
+		})
+	}
+	d.Set("filespaces", backupFilespaces)
 
 	return nil
 }
