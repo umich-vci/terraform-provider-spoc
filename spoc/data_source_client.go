@@ -91,6 +91,38 @@ func dataSourceClient() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"at_risk": &schema.Schema{
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"schedules": &schema.Schema{
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"start_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"server_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"schedule_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"run_time": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"domain_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -145,6 +177,35 @@ func dataSourceClientRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ssl_required", backupClientDetails.SSLRequired)
 	d.Set("option_set", backupClientDetails.OptionSet)
 	d.Set("split_large_objects", splitLargeObjects)
+
+	backupClientAtRisk, _, err := client.Clients.AtRisk(context.Background(), serverName, name)
+	if err != nil {
+		return err
+	}
+
+	atRisk, err := parseYesNoBool(backupClientAtRisk.AtRisk)
+	if err != nil {
+		return err
+	}
+	d.Set("at_risk", atRisk)
+
+	rawBackupClientSchedules, _, err := client.Clients.Schedules(context.Background(), serverName, backupClient.Domain, name)
+	if err != nil {
+		return err
+	}
+
+	backupClientSchedules := make([]map[string]interface{}, 0, len(rawBackupClientSchedules))
+	for i := range rawBackupClientSchedules {
+		backupClientSchedules = append(backupClientSchedules, map[string]interface{}{
+			"start_time":    rawBackupClientSchedules[i].StartTime,
+			"server_name":   rawBackupClientSchedules[i].ServerName,
+			"schedule_name": rawBackupClientSchedules[i].ScheduleName,
+			"run_time":      rawBackupClientSchedules[i].RunTime,
+			"domain_name":   rawBackupClientSchedules[i].DomainName,
+		})
+	}
+
+	d.Set("schedules", backupClientSchedules)
 
 	return nil
 }
