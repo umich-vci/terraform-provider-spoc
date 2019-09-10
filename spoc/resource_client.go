@@ -2,6 +2,7 @@ package spoc
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/umich-vci/gospoc"
@@ -150,9 +151,15 @@ func resourceClientCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	serverName := d.Get("server_name").(string)
+	name := d.Get("name").(string)
+
+	_, _, err = client.Clients.Details(context.Background(), serverName, name)
+	if err == nil {
+		return fmt.Errorf("A node with name %s already exists on server %s", name, serverName)
+	}
 
 	register := new(gospoc.RegisterClientRequest)
-	register.Name = d.Get("name").(string)
+	register.Name = name
 	register.Authentication = d.Get("authentication").(string)
 	register.Password = d.Get("password").(string)
 	register.Domain = d.Get("domain").(string)
