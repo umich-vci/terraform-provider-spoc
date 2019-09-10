@@ -204,12 +204,17 @@ func dataSourceClientRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	decommissioned, err := parseYesNoBool(backupClientDetails.Decommissioned)
+	if err != nil {
+		return err
+	}
+
 	d.Set("contact", backupClientDetails.Contact)
 	d.Set("deduplication", backupClientDetails.Deduplication)
 	d.Set("email", backupClientDetails.Email)
 	d.Set("authentication", backupClientDetails.Authentication)
 	d.Set("session_initiation", backupClientDetails.SessionInitiation)
-	d.Set("decommissioned", backupClientDetails.Decommissioned)
+	d.Set("decommissioned", decommissioned)
 	d.Set("ssl_required", backupClientDetails.SSLRequired)
 	d.Set("option_set", backupClientDetails.OptionSet)
 	d.Set("split_large_objects", splitLargeObjects)
