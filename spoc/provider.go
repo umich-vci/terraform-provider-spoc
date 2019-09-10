@@ -53,7 +53,9 @@ func Provider() terraform.ResourceProvider {
 				Description: "Perform SSL verification",
 			},
 		},
-		ResourcesMap: map[string]*schema.Resource{},
+		ResourcesMap: map[string]*schema.Resource{
+			"spoc_client": resourceClient(),
+		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"spoc_client": dataSourceClient(),
 		},
