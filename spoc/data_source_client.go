@@ -2,6 +2,7 @@ package spoc
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/umich-vci/gospoc"
@@ -181,6 +182,10 @@ func dataSourceClientRead(d *schema.ResourceData, meta interface{}) error {
 		if backupClients[i].Name == name && backupClients[i].Server == serverName {
 			backupClient = backupClients[i]
 		}
+	}
+
+	if backupClient.Name == "" {
+		return fmt.Errorf("No backup client named %s found on server %s", name, serverName)
 	}
 
 	d.SetId(backupClient.Name)
