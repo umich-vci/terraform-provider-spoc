@@ -3,11 +3,14 @@ package spoc
 import (
 	"context"
 	"fmt"
+	"regexp"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/umich-vci/gospoc"
 )
+
+var nameRegex, _ = regexp.Compile("^[a-zA-Z0-9\\.\\-]*$")
 
 func resourceClient() *schema.Resource {
 	return &schema.Resource{
@@ -22,9 +25,10 @@ func resourceClient() *schema.Resource {
 				ForceNew: true,
 			},
 			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(nameRegex, "Name may only contain alphanumeric characters, '.', or '-'."),
 			},
 			"authentication": &schema.Schema{
 				Type:         schema.TypeString,
