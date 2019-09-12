@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/umich-vci/gospoc"
 )
 
@@ -26,10 +27,11 @@ func resourceClient() *schema.Resource {
 				ForceNew: true,
 			},
 			"authentication": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "Local",
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "Local",
+				ValidateFunc: validation.StringInSlice([]string{"Local", "LDAP"}, false),
+				ForceNew:     true,
 			},
 			"password": &schema.Schema{
 				Type:      schema.TypeString,
@@ -39,7 +41,6 @@ func resourceClient() *schema.Resource {
 			"domain": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"contact": &schema.Schema{
 				Type:     schema.TypeString,
@@ -68,16 +69,18 @@ func resourceClient() *schema.Resource {
 				Default:  "ClientOrServer",
 			},
 			"ssl_required": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "Default",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      "Default",
+				ValidateFunc: validation.StringInSlice([]string{"Default", "YES", "NO"}, false),
 			},
 			"session_initiation": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "ClientOrServer",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      "ClientOrServer",
+				ValidateFunc: validation.StringInSlice([]string{"ClientOrServer", "Serveronly"}, false),
 			},
 			"locked": &schema.Schema{
 				Type:     schema.TypeBool,
@@ -89,7 +92,7 @@ func resourceClient() *schema.Resource {
 				Computed: true,
 			},
 			"decommissioned": &schema.Schema{
-				Type:     schema.TypeBool,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"split_large_objects": &schema.Schema{
@@ -124,11 +127,6 @@ func resourceClientRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	decommissioned, err := parseYesNoBool(backupClientDetails.Decommissioned)
-	if err != nil {
-		return err
-	}
-
 	d.SetId(backupClientDetails.Name)
 	d.Set("contact", backupClientDetails.Contact)
 	d.Set("deduplication", backupClientDetails.Deduplication)
@@ -136,7 +134,7 @@ func resourceClientRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("authentication", backupClientDetails.Authentication)
 	d.Set("session_initiation", backupClientDetails.SessionInitiation)
 	d.Set("locked", locked)
-	d.Set("decommissioned", decommissioned)
+	d.Set("decommissioned", backupClientDetails.Decommissioned)
 	d.Set("ssl_required", backupClientDetails.SSLRequired)
 	d.Set("option_set", backupClientDetails.OptionSet)
 	d.Set("split_large_objects", splitLargeObjects)
@@ -226,7 +224,7 @@ func resourceClientUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("schedule") {
+	if d.HasChange("schedule") || d.HasChange("domain") {
 		schedule := d.Get("schedule").(string)
 		domain := d.Get("domain").(string)
 		_, err := client.Clients.AssignSchedule(context.Background(), serverName, name, domain, schedule)
