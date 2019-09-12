@@ -10,7 +10,14 @@ import (
 	"github.com/umich-vci/gospoc"
 )
 
+const (
+	reservedCharactersWarning = "May not contain ' ', '*', or '?'."
+	nameRegexWarning          = "May only contain alphanumeric characters, '.', or '-'."
+)
+
 var nameRegex, _ = regexp.Compile("^[a-zA-Z0-9\\.\\-]*$")
+
+var reservedCharacters, _ = regexp.Compile("^[^ *?]*$")
 
 func resourceClient() *schema.Resource {
 	return &schema.Resource{
@@ -20,15 +27,16 @@ func resourceClient() *schema.Resource {
 		Delete: resourceClientDelete,
 		Schema: map[string]*schema.Schema{
 			"server_name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(reservedCharacters, reservedCharactersWarning),
 			},
 			"name": &schema.Schema{
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(nameRegex, "Name may only contain alphanumeric characters, '.', or '-'."),
+				ValidateFunc: validation.StringMatch(nameRegex, nameRegexWarning),
 			},
 			"authentication": &schema.Schema{
 				Type:         schema.TypeString,
@@ -38,39 +46,45 @@ func resourceClient() *schema.Resource {
 				ForceNew:     true,
 			},
 			"password": &schema.Schema{
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				Sensitive:    true,
+				ValidateFunc: validation.StringMatch(reservedCharacters, reservedCharactersWarning),
 			},
 			"domain": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringMatch(reservedCharacters, reservedCharactersWarning),
 			},
 			"contact": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(reservedCharacters, reservedCharactersWarning),
 			},
 			"email": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(reservedCharacters, reservedCharactersWarning),
 			},
 			"schedule": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringMatch(reservedCharacters, reservedCharactersWarning),
 			},
 			"option_set": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				//Default:  "",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(reservedCharacters, reservedCharactersWarning),
 			},
 			"deduplication": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "ClientOrServer",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      "ClientOrServer",
+				ValidateFunc: validation.StringInSlice([]string{"ClientOrServer", "ServerOnly"}, false),
 			},
 			"ssl_required": &schema.Schema{
 				Type:         schema.TypeString,
@@ -84,7 +98,7 @@ func resourceClient() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Default:      "ClientOrServer",
-				ValidateFunc: validation.StringInSlice([]string{"ClientOrServer", "Serveronly"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"ClientOrServer", "ServerOnly"}, false),
 			},
 			"locked": &schema.Schema{
 				Type:     schema.TypeBool,
