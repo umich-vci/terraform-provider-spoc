@@ -130,8 +130,12 @@ func resourceClientRead(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	serverName := d.Get("server_name").(string)
 
-	backupClientDetails, _, err := client.Clients.Details(context.Background(), serverName, name)
+	backupClientDetails, resp, err := client.Clients.Details(context.Background(), serverName, name)
 	if err != nil {
+		if backupClientDetails == nil && resp.StatusCode == 200 {
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
