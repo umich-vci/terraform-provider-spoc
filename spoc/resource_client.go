@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -127,8 +128,9 @@ func resourceClientRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	name := d.Get("name").(string)
-	serverName := d.Get("server_name").(string)
+	id := d.Id()
+	name := strings.Split(id, "/")[1]
+	serverName := strings.Split(id, "/")[0]
 
 	backupClientDetails, resp, err := client.Clients.Details(context.Background(), serverName, name)
 	if err != nil {
@@ -149,7 +151,6 @@ func resourceClientRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.SetId(backupClientDetails.Name)
 	d.Set("contact", backupClientDetails.Contact)
 	d.Set("deduplication", backupClientDetails.Deduplication)
 	d.Set("email", backupClientDetails.Email)
@@ -211,6 +212,9 @@ func resourceClientCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	id := serverName + "/" + name
+	d.SetId(id)
+
 	return resourceClientRead(d, meta)
 }
 
@@ -220,8 +224,9 @@ func resourceClientUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	serverName := d.Get("server_name").(string)
-	name := d.Get("name").(string)
+	id := d.Id()
+	name := strings.Split(id, "/")[1]
+	serverName := strings.Split(id, "/")[0]
 
 	if d.HasChange("locked") {
 		locked := d.Get("locked").(bool)
@@ -264,8 +269,9 @@ func resourceClientDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	serverName := d.Get("server_name").(string)
-	name := d.Get("name").(string)
+	id := d.Id()
+	name := strings.Split(id, "/")[1]
+	serverName := strings.Split(id, "/")[0]
 
 	_, err = client.Clients.Decommission(context.Background(), serverName, name)
 	if err != nil {
