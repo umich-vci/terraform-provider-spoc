@@ -25,19 +25,20 @@ func Provider() terraform.ResourceProvider {
 		Schema: map[string]*schema.Schema{
 			"username": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SPOC_USERNAME", nil),
 				Description: "A Spectrum Protect Operations Center username.",
 			},
 			"password": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
+				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("SPOC_PASSWORD", nil),
 				Description: "The Spectrum Protect Operations Center password.",
 			},
 			"spoc_endpoint": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SPOC_ENDPOINT", nil),
 				Description: "The Spectrum Protect Operations Center endpoint hostname/port",
 			},
