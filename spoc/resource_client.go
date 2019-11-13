@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/umich-vci/gospoc"
 )
 
@@ -259,6 +259,12 @@ func resourceClientUpdate(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
+
+	// if d.HasChange("name") {
+	// 	newName := d.Get("name").(string)
+	// 	command := "RENAME NODE " + name + " " + newName
+	// 	client.CLI.IssueCommand(context.Background(), serverName, command)
+	// }
 
 	return resourceClientRead(d, meta)
 }
