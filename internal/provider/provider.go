@@ -117,6 +117,6 @@ func parseYesNoBool(val string) (bool, error) {
 		"NO":
 		return false, nil
 	default:
-		return false, fmt.Errorf("Unable to parse %s with parseYesNoBool", val)
+		return false, fmt.Errorf("unable to parse %s with parseYesNoBool", val)
 	}
 }
