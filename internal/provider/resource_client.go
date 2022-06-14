@@ -1,4 +1,4 @@
-package spoc
+package provider
 
 import (
 	"context"
@@ -123,10 +123,7 @@ func resourceClient() *schema.Resource {
 }
 
 func resourceClientRead(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
 
 	id := d.Id()
 	name := strings.Split(id, "/")[1]
@@ -166,15 +163,12 @@ func resourceClientRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClientCreate(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
 
 	serverName := d.Get("server_name").(string)
 	name := d.Get("name").(string)
 
-	_, _, err = client.Clients.Details(context.Background(), serverName, name)
+	_, _, err := client.Clients.Details(context.Background(), serverName, name)
 	if err == nil {
 		return fmt.Errorf("A node with name %s already exists on server %s", name, serverName)
 	}
@@ -219,10 +213,7 @@ func resourceClientCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClientUpdate(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
 
 	id := d.Id()
 	name := strings.Split(id, "/")[1]
@@ -270,16 +261,13 @@ func resourceClientUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClientDelete(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
 
 	id := d.Id()
 	name := strings.Split(id, "/")[1]
 	serverName := strings.Split(id, "/")[0]
 
-	_, err = client.Clients.Decommission(context.Background(), serverName, name)
+	_, err := client.Clients.Decommission(context.Background(), serverName, name)
 	if err != nil {
 		return err
 	}

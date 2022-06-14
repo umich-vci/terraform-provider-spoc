@@ -1,4 +1,4 @@
-package spoc
+package provider
 
 import (
 	"context"
@@ -165,10 +165,7 @@ func dataSourceClient() *schema.Resource {
 }
 
 func dataSourceClientRead(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
 
 	name := d.Get("name").(string)
 	serverName := d.Get("server_name").(string)
