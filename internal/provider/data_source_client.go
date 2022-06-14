@@ -1,10 +1,10 @@
-package spoc
+package provider
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/umich-vci/gospoc"
 )
 
@@ -12,91 +12,91 @@ func dataSourceClient() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceClientRead,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"server_name": &schema.Schema{
+			"server_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"platform": &schema.Schema{
+			"platform": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": &schema.Schema{
+			"domain": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"locked": &schema.Schema{
+			"locked": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"version": &schema.Schema{
+			"version": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"vm_owner": &schema.Schema{
+			"vm_owner": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"guid": &schema.Schema{
+			"guid": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"link": &schema.Schema{
+			"link": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"vm_type": &schema.Schema{
+			"vm_type": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"contact": &schema.Schema{
+			"contact": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"deduplication": &schema.Schema{
+			"deduplication": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"email": &schema.Schema{
+			"email": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"authentication": &schema.Schema{
+			"authentication": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"session_initiation": &schema.Schema{
+			"session_initiation": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"decommissioned": &schema.Schema{
+			"decommissioned": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"ssl_required": &schema.Schema{
+			"ssl_required": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"option_set": &schema.Schema{
+			"option_set": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"split_large_objects": &schema.Schema{
+			"split_large_objects": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"at_risk": &schema.Schema{
+			"at_risk": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"schedules": &schema.Schema{
+			"schedules": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -124,7 +124,7 @@ func dataSourceClient() *schema.Resource {
 					},
 				},
 			},
-			"filespaces": &schema.Schema{
+			"filespaces": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -165,10 +165,7 @@ func dataSourceClient() *schema.Resource {
 }
 
 func dataSourceClientRead(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
 
 	name := d.Get("name").(string)
 	serverName := d.Get("server_name").(string)
@@ -185,7 +182,7 @@ func dataSourceClientRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if backupClient.Name == "" {
-		return fmt.Errorf("No backup client named %s found on server %s", name, serverName)
+		return fmt.Errorf("no backup client named %s found on server %s", name, serverName)
 	}
 
 	d.SetId(backupClient.Name)

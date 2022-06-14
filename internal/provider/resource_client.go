@@ -1,4 +1,4 @@
-package spoc
+package provider
 
 import (
 	"context"
@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/umich-vci/gospoc"
 )
 
@@ -16,7 +16,7 @@ const (
 	nameRegexWarning          = "May only contain alphanumeric characters, '.', or '-'."
 )
 
-var nameRegex, _ = regexp.Compile("^[a-zA-Z0-9\\.\\-]*$")
+var nameRegex, _ = regexp.Compile(`^[a-zA-Z0-9\.\-]*$`)
 
 var reservedCharacters, _ = regexp.Compile("^[^ *?]*$")
 
@@ -27,94 +27,94 @@ func resourceClient() *schema.Resource {
 		Update: resourceClientUpdate,
 		Delete: resourceClientDelete,
 		Schema: map[string]*schema.Schema{
-			"server_name": &schema.Schema{
+			"server_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(reservedCharacters, reservedCharactersWarning),
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(nameRegex, nameRegexWarning),
 			},
-			"authentication": &schema.Schema{
+			"authentication": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "Local",
 				ValidateFunc: validation.StringInSlice([]string{"Local", "LDAP"}, false),
 				ForceNew:     true,
 			},
-			"password": &schema.Schema{
+			"password": {
 				Type:         schema.TypeString,
 				Required:     true,
 				Sensitive:    true,
 				ValidateFunc: validation.StringMatch(reservedCharacters, reservedCharactersWarning),
 			},
-			"domain": &schema.Schema{
+			"domain": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringMatch(reservedCharacters, reservedCharactersWarning),
 			},
-			"contact": &schema.Schema{
+			"contact": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(reservedCharacters, reservedCharactersWarning),
 			},
-			"email": &schema.Schema{
+			"email": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(reservedCharacters, reservedCharactersWarning),
 			},
-			"schedule": &schema.Schema{
+			"schedule": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringMatch(reservedCharacters, reservedCharactersWarning),
 			},
-			"option_set": &schema.Schema{
+			"option_set": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(reservedCharacters, reservedCharactersWarning),
 			},
-			"deduplication": &schema.Schema{
+			"deduplication": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				Default:      "ClientOrServer",
 				ValidateFunc: validation.StringInSlice([]string{"ClientOrServer", "ServerOnly"}, false),
 			},
-			"ssl_required": &schema.Schema{
+			"ssl_required": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				Default:      "Default",
 				ValidateFunc: validation.StringInSlice([]string{"Default", "YES", "NO"}, false),
 			},
-			"session_initiation": &schema.Schema{
+			"session_initiation": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				Default:      "ClientOrServer",
 				ValidateFunc: validation.StringInSlice([]string{"ClientOrServer", "ServerOnly"}, false),
 			},
-			"locked": &schema.Schema{
+			"locked": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"link": &schema.Schema{
+			"link": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"decommissioned": &schema.Schema{
+			"decommissioned": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"split_large_objects": &schema.Schema{
+			"split_large_objects": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -123,10 +123,7 @@ func resourceClient() *schema.Resource {
 }
 
 func resourceClientRead(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
 
 	id := d.Id()
 	name := strings.Split(id, "/")[1]
@@ -166,17 +163,14 @@ func resourceClientRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClientCreate(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
 
 	serverName := d.Get("server_name").(string)
 	name := d.Get("name").(string)
 
-	_, _, err = client.Clients.Details(context.Background(), serverName, name)
+	_, _, err := client.Clients.Details(context.Background(), serverName, name)
 	if err == nil {
-		return fmt.Errorf("A node with name %s already exists on server %s", name, serverName)
+		return fmt.Errorf("a node with name %s already exists on server %s", name, serverName)
 	}
 
 	register := new(gospoc.RegisterClientRequest)
@@ -219,10 +213,7 @@ func resourceClientCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClientUpdate(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
 
 	id := d.Id()
 	name := strings.Split(id, "/")[1]
@@ -251,7 +242,7 @@ func resourceClientUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("schedule") || d.HasChange("domain") {
+	if d.HasChanges("schedule", "domain") {
 		schedule := d.Get("schedule").(string)
 		domain := d.Get("domain").(string)
 		_, err := client.Clients.AssignSchedule(context.Background(), serverName, name, domain, schedule)
@@ -270,16 +261,13 @@ func resourceClientUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClientDelete(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
 
 	id := d.Id()
 	name := strings.Split(id, "/")[1]
 	serverName := strings.Split(id, "/")[0]
 
-	_, err = client.Clients.Decommission(context.Background(), serverName, name)
+	_, err := client.Clients.Decommission(context.Background(), serverName, name)
 	if err != nil {
 		return err
 	}
