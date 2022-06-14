@@ -242,7 +242,7 @@ func resourceClientUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("schedule") || d.HasChange("domain") {
+	if d.HasChanges("schedule", "domain") {
 		schedule := d.Get("schedule").(string)
 		domain := d.Get("domain").(string)
 		_, err := client.Clients.AssignSchedule(context.Background(), serverName, name, domain, schedule)
