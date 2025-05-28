@@ -76,5 +76,3 @@ Read-Only:
 - `schedule_name` (String)
 - `server_name` (String)
 - `start_time` (String)
-
-

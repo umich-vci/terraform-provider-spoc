@@ -49,5 +49,3 @@ resource "spoc_client" "example_client" {
 - `id` (String) The ID of this resource.
 - `link` (String)
 - `split_large_objects` (Boolean)
-
-
